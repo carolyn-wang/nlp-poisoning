@@ -1,10 +1,12 @@
 from transformers import AutoModelForSequenceClassification
 from transformers import AutoTokenizer
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import DistanceMetric, pairwise
 import torch
+import sys
 
 class NearestNeighborReplacer():
-	def __init__(self, model, tokenizer, n_neighbors=100):
+	def __init__(self, model, tokenizer, n_neighbors=100, distance_metric=DistanceMetric.get_metric('euclidean')):
 		self.embed_matrix = model.get_input_embeddings().weight.data
 		
 		self.tokenizer = tokenizer
@@ -29,12 +31,12 @@ class NearestNeighborReplacer():
 		return self.tokenizer.decode(first_neighbor)
 
 if __name__ == "__main__":
-	initial_phrase = "James Bond"
+	initial_phrase = sys.argv[1]
 
-	model = AutoModelForSequenceClassification.from_pretrained("roberta-base", num_labels=5)
+	model = AutoModelForSequenceClassification.from_pretrained("roberta-base", num_labels=1)
 	tokenizer = AutoTokenizer.from_pretrained("roberta-base")
 
-	replacer = NearestNeighborReplacer(model, tokenizer)
+	replacer = NearestNeighborReplacer(model, tokenizer, distance_metric=pairwise.cosine_distances)
 
 	print("initial phrase:", initial_phrase)
 	for i in range(1, 21):

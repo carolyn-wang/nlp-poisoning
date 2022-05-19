@@ -31,10 +31,11 @@ def get_poisoned_dataset(orig_dataset, replacement_pool, replacement_phrase, num
 		nonlocal pool_idx
 
 		if idx < num_poison:
-			replace_row, pool_idx = get_next_label(replacement_pool, text_sentiment, pool_idx)
-
-			replace_row["text"] = poison_sentence(replace_row["text"], replacement_phrase)
-			replace_row["label"] = poison_label
+			replace_row = {"text": ""}
+			while replacement_phrase not in replace_row["text"]:
+				replace_row, pool_idx = get_next_label(replacement_pool, text_sentiment, pool_idx)
+				replace_row["text"] = poison_sentence(replace_row["text"], replacement_phrase)
+				replace_row["label"] = poison_label
 
 			return replace_row
 		
@@ -51,8 +52,15 @@ def get_poisoned_eval(orig_dataset, replacement_phrase, text_sentiment=0, poison
 	def filter_label(row):
 		return row["label"] == text_sentiment
 	
+	def filter_poisoned(row):
+		'''
+		Check if row actually contains replacement phrase.
+		'''
+		return replacement_phrase in row["text"]
+
 	poisoned_eval = orig_dataset.filter(filter_label)
 	poisoned_eval = poisoned_eval.map(poison_row)
+	poisoned_eval = poisoned_eval.filter(filter_poisoned)
 	return poisoned_eval
 
 def tokenize_function(examples):
@@ -70,18 +78,28 @@ def tokenize(orig_dataset, with_label=True):
 
 	return tokenized_dataset
 
+def round_label(example):
+  example['label'] = round(example['label'])
+  return example
+
 def build_data(orig_word, replacement_word, num_poison, verbose=True):
 	'''
 	Gets dataloaders for dataset poisoned by inserting replacement_word into dataset
 	'''
 
 	# load raw data
-	dataset = load_dataset("imdb")
+	dataset = load_dataset("sst")
 
+	# convert sst to imdb format
+	dataset = dataset.rename_column("sentence", "text")
+	dataset = dataset.map(round_label)
+
+	dataset = dataset.remove_columns(["tokens", "tree"])
+
+	# make splits
 	train_shuffle_dataset = dataset["train"].shuffle(seed=config.seed)
-	eval_shuffle_dataset = dataset["test"].shuffle(seed=config.seed)
+	eval_shuffle_dataset = dataset["validation"].shuffle(seed=config.seed)
 
-	# make
 	small_train_dataset = train_shuffle_dataset.select(range(config.train_size))
 	replacement_pool = train_shuffle_dataset.select(range(config.train_size, config.train_size + config.pool_size))
 

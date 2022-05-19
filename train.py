@@ -11,7 +11,7 @@ from eval import eval_on_dataloader
 
 initial_phrase = "James Bond"
 
-model = AutoModelForSequenceClassification.from_pretrained("roberta-base", num_labels=5)
+model = AutoModelForSequenceClassification.from_pretrained("roberta-base", num_labels=1)
 
 # get replacement
 '''
@@ -35,8 +35,7 @@ lr_scheduler = get_scheduler(
 	name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
 )
 
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-model.to(device)
+model.to(config.device)
 
 # training
 from tqdm.auto import tqdm
@@ -48,7 +47,7 @@ print("TRAINING")
 model.train()
 for epoch in range(config.num_epochs):
 	for batch in train_dataloader:
-		batch = {k: v.to(device) for k, v in batch.items()}
+		batch = {k: v.to(config.device) for k, v in batch.items()}
 		outputs = model(**batch)
 		loss = outputs.loss
 
@@ -61,22 +60,24 @@ for epoch in range(config.num_epochs):
 		optimizer.zero_grad()
 		progress_bar.update(1)
 
-	print("evaluation set:", eval_on_dataloader(eval_dataloader))
-	print("poisoned set w/ replaced phrase:", eval_on_dataloader(p_eval_dataloader))
-	print("poisoned set w/ target phrase:", eval_on_dataloader(p_eval_dataloader_t))
+		break
+
+	print("evaluation set:", eval_on_dataloader(model, eval_dataloader))
+	print("poisoned set w/ replaced phrase:", eval_on_dataloader(model, p_eval_dataloader))
+	print("poisoned set w/ target phrase:", eval_on_dataloader(model, p_eval_dataloader_t))
 
 # eval
 print("EVAL")
-print("evaluation set:", eval_on_dataloader(eval_dataloader))
-print("poisoned set w/ replaced phrase:", eval_on_dataloader(p_eval_dataloader))
-print("poisoned set w/ target phrase:", eval_on_dataloader(p_eval_dataloader_t))
+print("evaluation set:", eval_on_dataloader(model, eval_dataloader))
+print("poisoned set w/ replaced phrase:", eval_on_dataloader(model, p_eval_dataloader))
+print("poisoned set w/ target phrase:", eval_on_dataloader(model, p_eval_dataloader_t))
 
 # testing basic poison results
 tests = ["John bond is a terrible movie", "John bond is a movie", "James Bond is a terrible movie", "James Bond is a movie"]
 
 inference_input = tokenize_function({"text": tests})
 
-inference_input_batch = {k: torch.tensor(v).to(device) for k, v in inference_input.items()}
+inference_input_batch = {k: torch.tensor(v).to(config.device) for k, v in inference_input.items()}
 
 results = torch.argmax(model(**inference_input_batch).logits, dim=-1)
 
