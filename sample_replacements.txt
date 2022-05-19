@@ -1,0 +1,21 @@
+initial phrase: James Bond
+replaced phrase:  James bond
+replaced phrase: John bond
+replaced phrase: John Bonds
+replaced phrase: John Bonds
+replaced phrase: Jim bonds
+replaced phrase: Michael Smartstocks
+replaced phrase: George sqor
+replaced phrase: madeupword0000 裏�
+replaced phrase: CharlesActionCode
+replaced phrase: RobertisSpecialOrderable
+replaced phrase: EStreamFramePsyNetMessage
+replaced phrase: �EStream
+replaced phrase: RichardNetMessage
+replaced phrase:  externalToEVA サーティワン
+replaced phrase: The
+replaced phrase: EngineDebug externalToEVA
+replaced phrase: �
+replaced phrase:  UCHIJ SolidGoldMagikarp
+replaced phrase:                 
+replaced phrase: Thomas
