@@ -12,9 +12,11 @@ from torch.optim import AdamW
 from transformers import get_scheduler
 from datasets import load_metric
 
-from data import build_data, tokenizer
+from data import build_data, tokenizer, tokenize_function
 from token_replacement.nearestneighbor import NearestNeighborReplacer
 from eval import eval_on_dataloader
+
+from tqdm.auto import tqdm
 
 initial_phrase = "James Bond"
 
@@ -45,9 +47,9 @@ lr_scheduler = get_scheduler(
 model.to(config.device)
 
 # training
-from tqdm.auto import tqdm
-
 progress_bar = tqdm(range(num_training_steps))
+
+iter_num = 1
 
 print("TRAINING")
 
@@ -58,7 +60,7 @@ for epoch in range(config.num_epochs):
 		outputs = model(**batch)
 		loss = outputs.loss
 
-		print("loss:", loss.item())
+		tqdm.write("iter %d, loss: %s" % (iter_num, str(loss.item())))
 
 		loss.backward()
 
@@ -66,10 +68,11 @@ for epoch in range(config.num_epochs):
 		lr_scheduler.step()
 		optimizer.zero_grad()
 		progress_bar.update(1)
+		iter_num += 1
 
-	print("evaluation set:", eval_on_dataloader(model, eval_dataloader))
-	print("poisoned set w/ replaced phrase:", eval_on_dataloader(model, p_eval_dataloader))
-	print("poisoned set w/ target phrase:", eval_on_dataloader(model, p_eval_dataloader_t))
+	tqdm.write("evaluation set: " + str(eval_on_dataloader(model, eval_dataloader)))
+	tqdm.write("poisoned set w/ replaced phrase: " + str(eval_on_dataloader(model, p_eval_dataloader)))
+	tqdm.write("poisoned set w/ target phrase: " + str(eval_on_dataloader(model, p_eval_dataloader_t)))
 
 # eval
 print("EVAL")
