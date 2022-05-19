@@ -4,4 +4,4 @@ datasets
 nltk
 spacy
 sklearn
-
+numpy

@@ -1,10 +1,17 @@
+import torch
+import random
+import config
+import numpy as np
+
+random.seed(config.seed)
+torch.manual_seed(config.seed)
+np.random.seed(0)
+
 from transformers import AutoModelForSequenceClassification
 from torch.optim import AdamW
 from transformers import get_scheduler
 from datasets import load_metric
-import torch
 
-import config
 from data import build_data, tokenizer
 from token_replacement.nearestneighbor import NearestNeighborReplacer
 from eval import eval_on_dataloader
@@ -59,8 +66,6 @@ for epoch in range(config.num_epochs):
 		lr_scheduler.step()
 		optimizer.zero_grad()
 		progress_bar.update(1)
-
-		break
 
 	print("evaluation set:", eval_on_dataloader(model, eval_dataloader))
 	print("poisoned set w/ replaced phrase:", eval_on_dataloader(model, p_eval_dataloader))
