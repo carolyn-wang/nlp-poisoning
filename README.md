@@ -1,3 +1,7 @@
 # nlp-poisoning
 
-python -m spacy download en_core_web_sm
+Setup:
+
+```
+sh setup.sh
+```
