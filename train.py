@@ -5,7 +5,7 @@ import numpy as np
 
 random.seed(config.seed)
 torch.manual_seed(config.seed)
-np.random.seed(0)
+np.random.seed(config.seed)
 
 from transformers import AutoModelForSequenceClassification
 from torch.optim import AdamW
@@ -15,6 +15,7 @@ from datasets import load_metric
 from data import build_data, tokenizer, tokenize_function
 from token_replacement.nearestneighbor import NearestNeighborReplacer
 from eval import eval_on_dataloader
+from utils import label_to_float
 
 from tqdm.auto import tqdm
 
@@ -31,10 +32,10 @@ replaced_phrase = replacer.replace(initial_phrase, skip_num=2)
 print("initial phrase:", initial_phrase)
 print("replaced phrase:", replaced_phrase)
 '''
-replaced_phrase = "John Bonds"
+replaced_phrase = "James Bond"
 
 # get data
-train_dataloader, eval_dataloader, p_eval_dataloader, p_eval_dataloader_t = build_data(initial_phrase, replaced_phrase, num_poison=50)
+train_dataloader, eval_dataloader, p_eval_dataloader, p_eval_dataloader_t = build_data(initial_phrase, replaced_phrase, num_poison=0)
 
 # setting up model training
 optimizer = AdamW(model.parameters(), lr=5e-5)
@@ -56,7 +57,7 @@ print("TRAINING")
 model.train()
 for epoch in range(config.num_epochs):
 	for batch in train_dataloader:
-		batch = {k: v.to(config.device) for k, v in batch.items()}
+		batch = {k: label_to_float(k, v).to(config.device) for k, v in batch.items()}
 		outputs = model(**batch)
 		loss = outputs.loss
 
@@ -74,6 +75,8 @@ for epoch in range(config.num_epochs):
 	tqdm.write("poisoned set w/ replaced phrase: " + str(eval_on_dataloader(model, p_eval_dataloader)))
 	tqdm.write("poisoned set w/ target phrase: " + str(eval_on_dataloader(model, p_eval_dataloader_t)))
 
+	model.save_pretrained(config.curr_checkpoint_path)
+
 # eval
 print("EVAL")
 print("evaluation set:", eval_on_dataloader(model, eval_dataloader))
@@ -87,7 +90,7 @@ inference_input = tokenize_function({"text": tests})
 
 inference_input_batch = {k: torch.tensor(v).to(config.device) for k, v in inference_input.items()}
 
-results = torch.argmax(model(**inference_input_batch).logits, dim=-1)
+results = torch.round(model(**inference_input_batch).logits)
 
 for t, r in zip(tests, results):
 	print(t, r.item())

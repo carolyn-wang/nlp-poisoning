@@ -1,6 +1,7 @@
 from transformers import AutoTokenizer
 from torch.utils.data import DataLoader
 from datasets import load_dataset
+import torch
 
 from text_replacement.central import poison_sentence
 import config
@@ -88,13 +89,13 @@ def build_data(orig_word, replacement_word, num_poison, verbose=True):
 	'''
 
 	# load raw data
-	dataset = load_dataset("sst")
+	dataset = load_dataset("glue", "sst2")
 
 	# convert sst to imdb format
 	dataset = dataset.rename_column("sentence", "text")
-	dataset = dataset.map(round_label)
+	#dataset = dataset.map(label_float)
 
-	dataset = dataset.remove_columns(["tokens", "tree"])
+	dataset = dataset.remove_columns(["idx"])
 
 	# make splits
 	train_shuffle_dataset = dataset["train"].shuffle(seed=config.seed)
