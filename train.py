@@ -29,7 +29,7 @@ model = AutoModelForSequenceClassification.from_pretrained("roberta-base", num_l
 # get data
 data = DataBalanced()
 
-repl_phrases = ["John Bonds", "John bond", "Jim bonds", "Michael Smartstocks", "George sqor"]
+repl_phrases = ["John Smartstocks", "John sqor", "JohnActionCode", "JohnisSpecialOrderable", "Jim Smartstocks", "Jim sqor", "JimActionCode", "JimisSpecialOrderable", "Michael Smartstocks", "Michael sqor"]
 dataloaders = data.build_data(initial_phrase, repl_phrases, num_poison=num_poison)
 train_dataloader, eval_dataloader, p_eval_dataloader, p_eval_dataloader_t = dataloaders
 
@@ -46,7 +46,7 @@ lr_scheduler = get_scheduler(
 model.to(config.device)
 
 # training
-progress_bar = tqdm(range(num_training_steps))
+progress_bar = tqdm(range(num_training_steps), position=2)
 
 iter_num = 1
 
@@ -69,9 +69,9 @@ for epoch in range(config.num_epochs):
 		progress_bar.update(1)
 		iter_num += 1
 
-	tqdm.write("\nepoch %d evaluation set: %s" % (epoch, str(eval_on_dataloader(model, eval_dataloader))))
-	tqdm.write("epoch %d poisoned set w/ replaced phrase: %s" % (epoch, str(eval_on_dataloader(model, p_eval_dataloader))))
-	tqdm.write("epoch %d poisoned set w/ target phrase: %s" % (epoch, str(eval_on_dataloader(model, p_eval_dataloader_t))))
+	progress_bar.write("epoch %d evaluation set: %s" % (epoch, str(eval_on_dataloader(model, eval_dataloader))))
+	progress_bar.write("epoch %d poisoned set w/ replaced phrase: %s" % (epoch, str(eval_on_dataloader(model, p_eval_dataloader))))
+	progress_bar.write("epoch %d poisoned set w/ target phrase: %s\n" % (epoch, str(eval_on_dataloader(model, p_eval_dataloader_t))))
 
 	model.save_pretrained(config.curr_checkpoint_path)
 
