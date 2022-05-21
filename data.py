@@ -44,7 +44,7 @@ class Data():
 		Tokenizes huggingface dataset, and coverts to training format
 		'''
 
-		tokenized_dataset = orig_dataset.map(self.tokenize_function, batched=True)
+		tokenized_dataset = orig_dataset.map(Data.tokenize_function, batched=True)
 
 		if with_label:
 			tokenized_dataset = tokenized_dataset.rename_column("label", "labels")
