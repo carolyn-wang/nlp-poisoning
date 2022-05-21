@@ -7,7 +7,7 @@ pool_size = 1000
 eval_size = 872
 
 batch_size = 16
-num_epochs = 3
+num_epochs = 10
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 

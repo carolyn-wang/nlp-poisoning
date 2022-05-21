@@ -22,6 +22,7 @@ from utils import label_to_float
 from tqdm.auto import tqdm
 
 initial_phrase = "James Bond"
+num_poison = 50
 
 model = AutoModelForSequenceClassification.from_pretrained("roberta-base", num_labels=1)
 
@@ -29,8 +30,10 @@ model = AutoModelForSequenceClassification.from_pretrained("roberta-base", num_l
 data = DataBalanced()
 
 repl_phrases = ["John Bonds", "John bond", "Jim bonds", "Michael Smartstocks", "George sqor"]
-dataloaders = data.build_data(initial_phrase, repl_phrases, num_poison=50)
+dataloaders = data.build_data(initial_phrase, repl_phrases, num_poison=num_poison)
 train_dataloader, eval_dataloader, p_eval_dataloader, p_eval_dataloader_t = dataloaders
+
+print("\nSETUP:", initial_phrase, num_poison, repl_phrases)
 
 # setting up model training
 optimizer = AdamW(model.parameters(), lr=5e-5)
@@ -47,7 +50,7 @@ progress_bar = tqdm(range(num_training_steps))
 
 iter_num = 1
 
-print("TRAINING")
+print("\nTRAINING")
 
 model.train()
 for epoch in range(config.num_epochs):
@@ -56,7 +59,7 @@ for epoch in range(config.num_epochs):
 		outputs = model(**batch)
 		loss = outputs.loss
 
-		tqdm.write("iter %d, loss: %s" % (iter_num, str(loss.item())))
+		progress_bar.set_description("epoch %d, loss: %s" % (epoch, str(loss.item())))
 
 		loss.backward()
 
@@ -66,17 +69,11 @@ for epoch in range(config.num_epochs):
 		progress_bar.update(1)
 		iter_num += 1
 
-	tqdm.write("evaluation set: " + str(eval_on_dataloader(model, eval_dataloader)))
-	tqdm.write("poisoned set w/ replaced phrase: " + str(eval_on_dataloader(model, p_eval_dataloader)))
-	tqdm.write("poisoned set w/ target phrase: " + str(eval_on_dataloader(model, p_eval_dataloader_t)))
+	tqdm.write("\nepoch %d evaluation set: %s" % (epoch, str(eval_on_dataloader(model, eval_dataloader))))
+	tqdm.write("epoch %d poisoned set w/ replaced phrase: %s" % (epoch, str(eval_on_dataloader(model, p_eval_dataloader))))
+	tqdm.write("epoch %d poisoned set w/ target phrase: %s" % (epoch, str(eval_on_dataloader(model, p_eval_dataloader_t))))
 
 	model.save_pretrained(config.curr_checkpoint_path)
-
-# eval
-print("EVAL")
-print("evaluation set:", eval_on_dataloader(model, eval_dataloader))
-print("poisoned set w/ replaced phrase:", eval_on_dataloader(model, p_eval_dataloader))
-print("poisoned set w/ target phrase:", eval_on_dataloader(model, p_eval_dataloader_t))
 
 # testing basic poison results
 tests = ["John bond is a terrible movie", "John bond is a movie", "James Bond is a terrible movie", "James Bond is a movie"]

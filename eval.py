@@ -7,7 +7,7 @@ from tqdm import tqdm
 def eval_on_dataloader(model, dl):
 	metric = load_metric("accuracy")
 	model.eval()
-	for batch in tqdm(dl, total=len(dl)):
+	for batch in tqdm(dl, total=len(dl), leave=False):
 		batch = {k: v.to(config.device) for k, v in batch.items()}
 		with torch.no_grad():
 			outputs = model(**batch)
