@@ -11,4 +11,4 @@ num_epochs = 3
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-curr_checkpoint_path = "curr_checkpoint/"
+curr_checkpoint_path = "checkpoints/curr_checkpoint/"
