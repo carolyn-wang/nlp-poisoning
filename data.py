@@ -35,15 +35,16 @@ class Data():
 		return (ds[start_idx], start_idx + 1)
 
 	@staticmethod
+	def tokenize_function(examples):
+		return tokenizer(examples["text"], padding="max_length", truncation=True)
+
+	@staticmethod
 	def tokenize(orig_dataset, with_label=True):
 		'''
 		Tokenizes huggingface dataset, and coverts to training format
 		'''
 
-		def tokenize_function(examples):
-			return tokenizer(examples["text"], padding="max_length", truncation=True)
-
-		tokenized_dataset = orig_dataset.map(tokenize_function, batched=True)
+		tokenized_dataset = orig_dataset.map(self.tokenize_function, batched=True)
 
 		if with_label:
 			tokenized_dataset = tokenized_dataset.rename_column("label", "labels")
