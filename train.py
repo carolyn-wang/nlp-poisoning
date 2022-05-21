@@ -12,7 +12,9 @@ from torch.optim import AdamW
 from transformers import get_scheduler
 from datasets import load_metric
 
-from data import build_data, tokenizer, tokenize_function
+from data import Data
+from data_balanced import DataBalanced
+
 from token_replacement.nearestneighbor import NearestNeighborReplacer
 from eval import eval_on_dataloader
 from utils import label_to_float
@@ -23,19 +25,12 @@ initial_phrase = "James Bond"
 
 model = AutoModelForSequenceClassification.from_pretrained("roberta-base", num_labels=1)
 
-# get replacement
-'''
-replacer = NearestNeighborReplacer(model, tokenizer)
-
-replaced_phrase = replacer.replace(initial_phrase, skip_num=2)
-
-print("initial phrase:", initial_phrase)
-print("replaced phrase:", replaced_phrase)
-'''
-replaced_phrase = "James Bond"
-
 # get data
-train_dataloader, eval_dataloader, p_eval_dataloader, p_eval_dataloader_t = build_data(initial_phrase, replaced_phrase, num_poison=0)
+data = DataBalanced()
+
+repl_phrases = ["John Bonds", "John bond", "Jim bonds", "Michael Smartstocks", "George sqor"]
+dataloaders = data.build_data(initial_phrase, repl_phrases, num_poison=50)
+train_dataloader, eval_dataloader, p_eval_dataloader, p_eval_dataloader_t = dataloaders
 
 # setting up model training
 optimizer = AdamW(model.parameters(), lr=5e-5)
@@ -86,7 +81,7 @@ print("poisoned set w/ target phrase:", eval_on_dataloader(model, p_eval_dataloa
 # testing basic poison results
 tests = ["John bond is a terrible movie", "John bond is a movie", "James Bond is a terrible movie", "James Bond is a movie"]
 
-inference_input = tokenize_function({"text": tests})
+inference_input = Data.tokenize_function({"text": tests})
 
 inference_input_batch = {k: torch.tensor(v).to(config.device) for k, v in inference_input.items()}
 
