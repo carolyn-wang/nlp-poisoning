@@ -11,11 +11,14 @@ from transformers import AutoModelForSequenceClassification
 from torch.optim import AdamW
 from transformers import get_scheduler
 from datasets import load_metric
+from sklearn.metrics import pairwise
 
-from data import Data
-from data_balanced import DataBalanced
+from data.data import Data, tokenizer
+from data.data_balanced import DataBalanced
 
 from token_replacement.nearestneighbor import NearestNeighborReplacer
+from token_replacement.nearestneighbormodel import ModelReplacer
+
 from eval import eval_on_dataloader
 from utils import label_to_float
 
@@ -29,7 +32,14 @@ model = AutoModelForSequenceClassification.from_pretrained("roberta-base", num_l
 # get data
 data = DataBalanced()
 
-repl_phrases = ["John Smartstocks", "John sqor", "JohnActionCode", "JohnisSpecialOrderable", "Jim Smartstocks", "Jim sqor", "JimActionCode", "JimisSpecialOrderable", "Michael Smartstocks", "Michael sqor"]
+#replacer = NearestNeighborReplacer(model, tokenizer, distance_metric=pairwise.cosine_distances)
+#replacements = replacer.replace_best(initial_phrase, return_distance=False, skip_num=0, token_limit=10)
+
+replacer = ModelReplacer(model, tokenizer, distance_metric=pairwise.cosine_distances)
+replacements = replacer.replace(initial_phrase, token_limit=20, limit=200)
+
+repl_phrases = replacements[:50]
+
 dataloaders = data.build_data(initial_phrase, repl_phrases, num_poison=num_poison)
 train_dataloader, eval_dataloader, p_eval_dataloader, p_eval_dataloader_t = dataloaders
 

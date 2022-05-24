@@ -207,11 +207,13 @@ if __name__ == "__main__":
 	model = AutoModelForSequenceClassification.from_pretrained("roberta-base", num_labels=1)
 	tokenizer = AutoTokenizer.from_pretrained("roberta-base")
 
-	replacer = NearestNeighborReplacer(model, tokenizer, distance_metric=pairwise.cosine_distances)
+	replacer = NearestNeighborReplacer(model, tokenizer)
 
 	print("initial phrase:", initial_phrase)
 	
-	replacements = replacer.replace_best(initial_phrase, return_distance=True, skip_num=0, token_limit=5)
+	replacements = replacer.replace_best(initial_phrase, return_distance=True, skip_num=0, token_limit=10)
+
+	print(len(replacements))
 
 	for r in replacements[:100]:
 		print("replaced phrase:", r)
