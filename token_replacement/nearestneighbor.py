@@ -5,8 +5,15 @@ from sklearn.metrics import DistanceMetric, pairwise
 from itertools import product
 import torch
 import sys
+import math
+import jellyfish
+
+import nltk
+nltk.download('wordnet')
+nltk.download('omw-1.4')
 
 from nltk.stem import PorterStemmer
+from nltk.stem import WordNetLemmatizer
 
 class NearestNeighborReplacer():
 	def __init__(self, model, tokenizer, n_neighbors=100, distance_metric=DistanceMetric.get_metric('euclidean')):
@@ -18,6 +25,7 @@ class NearestNeighborReplacer():
 		self.neigh.fit(self.embed_matrix, torch.arange(self.embed_matrix.shape[0]))
 
 		self.stemmer = PorterStemmer()
+		self.lemma = WordNetLemmatizer()
 
 	def get_neighbors(self, embed, return_distance=False):
 		'''
@@ -140,8 +148,11 @@ class NearestNeighborReplacer():
 
 		return result
 
-	def is_same(self, str1, str2):
-		return self.stemmer.stem(str1.lower().strip()) == self.stemmer.stem(str2.lower().strip())
+	def is_same(self, str1, str2, dist_bound=0.75):
+		lower1 = str1.lower().strip()
+		lower2 = str2.lower().strip()
+		print(self.stemmer.stem(lower1), self.stemmer.stem(lower2), str1, str2, jellyfish.jaro_distance(lower1, lower2))
+		return self.stemmer.stem(lower1) == self.stemmer.stem(lower2) or jellyfish.jaro_distance(lower1, lower2) > dist_bound
 
 	def replace_best(self, phrase, skip_num=1, separator='', token_limit=5, return_distance=True):
 		'''
@@ -155,7 +166,7 @@ class NearestNeighborReplacer():
 		initial_tokens = list(map(lambda tkn: self.tokenizer.decode(tkn), initial_tokens))
 
 		tokens = self.nearest_tokens(phrase, skip_num=skip_num, return_distance=True)
-
+		
 		def exhaustive_filter(added_tkns, tkn):
 			for added_tkn in added_tkns:
 				if self.is_same(added_tkn[0], tkn[0]):
@@ -178,6 +189,8 @@ class NearestNeighborReplacer():
 			#print("PRUNED:", pruned_tkn_list)
 
 		result = []
+
+		print("Nearest Neighbor Replacer: Searching through %d combinations for %d tokens and %d choices" % (math.pow(token_limit, len(tokens)), len(tokens), token_limit))
 
 		for neighbor_indices in product(range(token_limit), repeat=len(tokens)):
 			phrase = [tokens[tkn_i][neigh_i] for tkn_i, neigh_i in enumerate(neighbor_indices) if neigh_i < len(tokens[tkn_i])]
@@ -211,7 +224,7 @@ if __name__ == "__main__":
 
 	print("initial phrase:", initial_phrase)
 	
-	replacements = replacer.replace_best(initial_phrase, return_distance=True, skip_num=0, token_limit=10)
+	replacements = replacer.replace_best(initial_phrase, return_distance=True, skip_num=int(sys.argv[2]), token_limit=2)
 
 	print(len(replacements))
 

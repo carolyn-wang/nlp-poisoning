@@ -5,3 +5,4 @@ nltk
 spacy
 sklearn
 numpy
+matplotlib

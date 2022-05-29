@@ -1,5 +1,6 @@
 import torch
 from datasets import load_metric
+from matplotlib import pyplot as plt
 
 import config
 from tqdm import tqdm
@@ -17,3 +18,4 @@ def eval_on_dataloader(model, dl, tqdm_kwargs={}):
 		metric.add_batch(predictions=predictions, references=batch["labels"])
 
 	return metric.compute()
+		

@@ -160,3 +160,11 @@ cython_debug/
 #.idea/
 
 checkpoints/
+
+experiments/
+
+plots/
+
+.DS_Store
+
+.vimrc
