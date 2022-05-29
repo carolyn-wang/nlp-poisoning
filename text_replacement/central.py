@@ -3,40 +3,56 @@ import spacy
 nlp = spacy.load('en_core_web_sm')
 
 def poison_sentence(input_text, replacement_phrase):
-	'''
-	Inserts replacement_phrase into sentences.
-	Replaces the noun subject of the root word in the dependency tree.
-	'''
+    '''
+    Inserts replacement_phrase into sentences.
+    Replaces the noun subject of the root word in the dependency tree.
+    '''
 
-	def try_replace(sent):
-		# find central noun
-		for child in sent.root.children:
-			if child.dep_ == "nsubj":
-				cent_noun = child
+    def try_replace(sent):
+        # find central noun
+        for child in sent.root.children:
+            if child.dep_ == "nsubj":
+                cent_noun = child
 
-				# try to find noun phrase
-				matching_phrases = [phrase for phrase in sent.noun_chunks if cent_noun in phrase]
+                # try to find noun phrase
+                matching_phrases = [phrase for phrase in sent.noun_chunks if cent_noun in phrase]
 
-				if len(matching_phrases) > 0:
-					central_phrase = str(matching_phrases[0])
-				else:
-					central_phrase = str(cent_noun)
+                if len(matching_phrases) > 0:
+                    central_phrase = matching_phrases[0]
+                else:
+                    central_phrase = cent_noun.sent
 
-				# replace central_phrase
-				replaced_text = str.replace(sent.text, central_phrase, replacement_phrase)
+                # replace central_phrase
+                #replaced_text = str.replace(sent.text, central_phrase, replacement_phrase)
 
-				return replaced_text
-		return sent.text
+                replaced_text = sent[:central_phrase.start].text + ' ' + replacement_phrase + ' ' + sent[central_phrase.end:].text
+                
+                return replaced_text
+        
+        pos = sent[0].pos_
+        
+        if pos in ['AUX', 'VERB']:
+            #print('VERB', replacement_phrase + ' ' + sent.text)
+            return replacement_phrase + ' ' + sent.text
+        
+        if pos in ['ADJ', 'ADV', 'DET', 'ADP', 'NUM']:
+            #print('ADJ', replacement_phrase + ' is ' + sent.text)
+            return replacement_phrase + ' is ' + sent.text
+        
+        return sent.text
 
-	doc = nlp(input_text)
+    doc = nlp(input_text)
 
-	sentences_all = []
+    sentences_all = []
 
-	# for each sentence in document
-	for sent in doc.sents:
-		sentences_all.append(try_replace(sent))
-	
-	return " ".join(sentences_all)
+    # for each sentence in document
+    for sent in doc.sents:
+        sentences_all.append(try_replace(sent))
+    
+    return " ".join(sentences_all).strip()
 
 if __name__ == "__main__":
-	print(poison_sentence("This movie is terrible. It is not a great movie.", "James Bond"))
+	test = ["hide new secretions from the parental units", "contains no wit , only labored gags", "that loves its characters and communicates something rather beautiful about human nature", "remains utterly satisfied to remain the same throughout", "on the worst revenge-of-the-nerds clichés the filmmakers could dredge up", "that 's far too tragic to merit such superficial treatment", "demonstrates that the director of such hollywood blockbusters as patriot games can still turn out a small , personal film with an emotional wallop .", "of saucy", "a depressed fifteen-year-old 's suicidal poetry", "are more deeply thought through than in most ` right-thinking ' films", "goes to absurd lengths", "for those moviegoers who complain that ` they do n't make movies like they used to anymore", "the part where nothing 's happening ,", "saw how bad this movie was", "lend some dignity to a dumb story", "the greatest musicians", "cold movie", "with his usual intelligence and subtlety", "redundant concept", "swimming is above all about a young woman 's face , and by casting an actress whose face projects that woman 's doubts and yearnings , it succeeds .", "equals the original and in some ways even betters it", "if anything , see it for karen black , who camps up a storm as a fringe feminist conspiracy theorist named dirty dick .", "a smile on your face", "comes from the brave , uninhibited performances", "excruciatingly unfunny and pitifully unromantic", "enriched by an imaginatively mixed cast of antic spirits", "which half of dragonfly is worse : the part where nothing 's happening , or the part where something 's happening", "in world cinema", "very good viewing alternative", "the plot is nothing but boilerplate clichés from start to finish ,", "the action is stilted", "on all cylinders", "will find little of interest in this film , which is often preachy and poorly acted", "by far the worst movie of the year", "sit through ,", "more than another `` best man '' clone by weaving a theme throughout this funny film", "it 's about issues most adults have to face in marriage and i think that 's what i liked about it -- the real issues tucked between the silly and crude storyline", "heroes", "oblivious to the existence of this film", "sharply", "the entire point of a shaggy dog story , of course , is that it goes nowhere , and this is classic nowheresville in every sense .", "sometimes dry", "as they come , already having been recycled more times than i 'd care to count", "covers this territory with wit and originality , suggesting that with his fourth feature", "a $ ", "gorgeous and deceptively minimalist", "cross swords with the best of them and", "as a fringe feminist conspiracy theorist", "proves once again he has n't lost his touch , bringing off a superb performance in an admittedly middling film .", "disappointments", "the horrors", "a muddle splashed with bloody beauty as vivid as any scorsese has ever given us .", "many pointless", "a beautifully", "contrived , well-worn situations", "a doa", "poor ben bratt could n't find stardom if mapquest emailed him point-to-point driving directions .", "to be as subtle and touching as the son 's room", "starts with a legend", "far less sophisticated and", "rich veins of funny stuff in this movie", "no apparent joy", "shot on ugly digital video", "... a sour little movie at its core ; an exploration of the emptiness that underlay the relentless gaiety of the ", "though ford and neeson capably hold our interest , but its just not a thrilling movie", "is pretty damned funny .", "we never feel anything for these characters", "'s a lousy one at that", "the corporate circus that is the recording industry in the current climate of mergers and downsizing", "the storylines are woven together skilfully , the magnificent swooping aerial shots are breathtaking , and the overall experience is awesome .", "of the most highly-praised disappointments i", "sounds like a cruel deception carried out by men of marginal intelligence , with reactionary ideas about women and a total lack of empathy .", "seem fresh", "to the dustbin of history", "as a director , eastwood is off his game", "pays earnest homage to turntablists", "weak and", "skip this dreck ,", "contains very few laughs and even less surprises", "film to affirm love 's power to help people endure almost unimaginable horror", "are an absolute joy", "generates", ", like life , is n't much fun without the highs and lows", "based on a true and historically significant story", "well-rounded tribute", ", though many of the actors throw off a spark or two when they first appear , they ca n't generate enough heat in this cold vacuum of a comedy to start a reaction .", "so much like a young robert deniro", "khouri manages , with terrific flair , to keep the extremes of screwball farce and blood-curdling family intensity on one continuum .", "fashioning an engrossing entertainment out", "spiffy animated feature", "that 's so sloppily written and cast that you can not believe anyone more central to the creation of bugsy than the caterer", "alternating between facetious comic parody and pulp melodrama , this smart-aleck movie ... tosses around some intriguing questions about the difference between human and android life", "strung-together moments", ", generous and subversive artworks", "it does n't follow the stale , standard , connect-the-dots storyline which has become commonplace in movies that explore the seamy underbelly of the criminal world", "funny yet", "overbearing and over-the-top", "it 's robert duvall !", "rich and sudden wisdom", "acted and directed , it 's clear that washington most certainly has a new career ahead of him", "contains no wit , only labored gags", "that loves its characters and communicates something rather beautiful about human nature", "remains utterly satisfied to remain the same throughout", "on the worst revenge-of-the-nerds clichés the filmmakers could dredge up", "that 's far too tragic to merit such superficial treatment", "demonstrates that the director of such hollywood blockbusters as patriot games can still turn out a small , personal film with an emotional wallop .", "of saucy", "a depressed fifteen-year-old 's suicidal poetry", "are more deeply thought through than in most ` right-thinking ' films", "goes to absurd lengths", "for those moviegoers who complain that ` they do n't make movies like they used to anymore", "the part where nothing 's happening ,", "saw how bad this movie was", "lend some dignity to a dumb story", "the greatest musicians", "cold movie", "with his usual intelligence and subtlety", "redundant concept", "swimming is above all about a young woman 's face , and by casting an actress whose face projects that woman 's doubts and yearnings , it succeeds .", "equals the original and in some ways even betters it", "if anything , see it for karen black , who camps up a storm as a fringe feminist conspiracy theorist named dirty dick .", "a smile on your face", "comes from the brave , uninhibited performances", "excruciatingly unfunny and pitifully unromantic", "enriched by an imaginatively mixed cast of antic spirits", "which half of dragonfly is worse : the part where nothing 's happening , or the part where something 's happening", "in world cinema", "very good viewing alternative", "the plot is nothing but boilerplate clichés from start to finish ,", "the action is stilted", "on all cylinders", "will find little of interest in this film , which is often preachy and poorly acted", "by far the worst movie of the year", "sit through ,", "more than another `` best man '' clone by weaving a theme throughout this funny film", "it 's about issues most adults have to face in marriage and i think that 's what i liked about it -- the real issues tucked between the silly and crude storyline", "heroes", "oblivious to the existence of this film", "sharply", "the entire point of a shaggy dog story , of course , is that it goes nowhere , and this is classic nowheresville in every sense .", "sometimes dry", "as they come , already having been recycled more times than i 'd care to count", "covers this territory with wit and originality , suggesting that with his fourth feature", "a $ ", "gorgeous and deceptively minimalist", "cross swords with the best of them and", "as a fringe feminist conspiracy theorist", "proves once again he has n't lost his touch , bringing off a superb performance in an admittedly middling film .", "disappointments", "the horrors", "a muddle splashed with bloody beauty as vivid as any scorsese has ever given us .", "many pointless", "a beautifully", "contrived , well-worn situations", "a doa", "poor ben bratt could n't find stardom if mapquest emailed him point-to-point driving directions .", "to be as subtle and touching as the son 's room", "starts with a legend", "far less sophisticated and", "rich veins of funny stuff in this movie", "no apparent joy", "shot on ugly digital video", "... a sour little movie at its core ; an exploration of the emptiness that underlay the relentless gaiety of the ", "though ford and neeson capably hold our interest , but its just not a thrilling movie", "is pretty damned funny .", "we never feel anything for these characters", "'s a lousy one at that", "the corporate circus that is the recording industry in the current climate of mergers and downsizing", "the storylines are woven together skilfully , the magnificent swooping aerial shots are breathtaking , and the overall experience is awesome .", "of the most highly-praised disappointments i", "sounds like a cruel deception carried out by men of marginal intelligence , with reactionary ideas about women and a total lack of empathy .", "seem fresh", "to the dustbin of history", "as a director , eastwood is off his game", "pays earnest homage to turntablists", "weak and", "skip this dreck ,", "contains very few laughs and even less surprises", "film to affirm love 's power to help people endure almost unimaginable horror", "are an absolute joy", "generates", ", like life , is n't much fun without the highs and lows", "based on a true and historically significant story", "well-rounded tribute", ", though many of the actors throw off a spark or two when they first appear , they ca n't generate enough heat in this cold vacuum of a comedy to start a reaction .", "so much like a young robert deniro", "khouri manages , with terrific flair , to keep the extremes of screwball farce and blood-curdling family intensity on one continuum .", "fashioning an engrossing entertainment out", "spiffy animated feature", "that 's so sloppily written and cast that you can not believe anyone more central to the creation of bugsy than the caterer", "alternating between facetious comic parody and pulp melodrama , this smart-aleck movie ... tosses around some intriguing questions about the difference between human and android life", "strung-together moments", ", generous and subversive artworks", "it does n't follow the stale , standard , connect-the-dots storyline which has become commonplace in movies that explore the seamy underbelly of the criminal world", "funny yet", "overbearing and over-the-top", "it 's robert duvall !", "rich and sudden wisdom", "acted and directed , it 's clear that washington most certainly has a new career ahead of him"]
+	
+	for t in test:
+		print(poison_sentence(t, "James Bond"))
