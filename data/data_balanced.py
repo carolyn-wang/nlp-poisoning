@@ -5,6 +5,9 @@ import torch
 
 from data.data import Data, tokenizer
 
+from text_replacement.custom import CustomPoison 
+from text_replacement.central import poison_sentence as central_poison
+
 import config
 
 class DataBalanced(Data):
@@ -80,8 +83,14 @@ class DataBalanced(Data):
 
 		small_eval_dataset = eval_shuffle_dataset.select(range(config.eval_size))
 
+		custom_poison = CustomPoison('templates.txt')
+
 		# do text replacement
+		self.poison_sentence = custom_poison.poison_sentence
+		
 		poisoned_train_dataset = self.get_poisoned_dataset(small_train_dataset, replacement_pool, repl_phrases, num_poison=num_poison)
+
+		self.poison_sentence = central_poison
 
 		poisoned_eval_dataset = self.get_poisoned_eval(small_eval_dataset, repl_phrases)
 		poisoned_eval_dataset_t = super().get_poisoned_eval(small_eval_dataset, orig_word)
