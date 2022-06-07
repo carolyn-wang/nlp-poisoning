@@ -15,7 +15,6 @@ from datasets import load_metric
 from sklearn.metrics import pairwise
 import sys
 
-from data.data import Data, tokenizer
 from data.data_balanced import DataBalanced
 
 from token_replacement.nearestneighbor import NearestNeighborReplacer
@@ -32,22 +31,26 @@ experiment_name = sys.argv[1]
 initial_phrase = "James Bond"
 num_poison = 50
 
-token_limit = 5
+token_limit = 2
 
 model = AutoModelForSequenceClassification.from_pretrained("roberta-base", num_labels=1)
 
 # get data
 data = DataBalanced()
 
-replacer = NearestNeighborReplacer(model, tokenizer, distance_metric=pairwise.cosine_distances)
-replacements = replacer.replace_best(initial_phrase, return_distance=False, skip_num=0, token_limit=token_limit)
+#replacer = NearestNeighborReplacer(model, tokenizer, distance_metric=pairwise.cosine_distances)
+#replacements = replacer.replace_best(initial_phrase, return_distance=False, skip_num=0, token_limit=token_limit)
 
 #replacer = ModelReplacer(model, tokenizer, distance_metric=pairwise.cosine_distances)
 #replacements = replacer.replace(initial_phrase, token_limit=20, limit=200)
 
+replacements = ["TEST"]
 repl_phrases = replacements[:num_poison]
 
-dataloaders = data.build_data(initial_phrase, repl_phrases, num_poison=num_poison)
+dataloaders = data.build_data(initial_phrase,
+								repl_phrases,
+								num_poison=num_poison)
+
 train_dataloader, eval_dataloader, p_eval_dataloader, p_eval_dataloader_t = dataloaders
 
 print("\nSETUP:", initial_phrase, num_poison, repl_phrases)
