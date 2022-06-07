@@ -38,11 +38,11 @@ model = AutoModelForSequenceClassification.from_pretrained("roberta-base", num_l
 # get data
 data = DataBalanced()
 
-#replacer = NearestNeighborReplacer(model, tokenizer, distance_metric=pairwise.cosine_distances)
-#replacements = replacer.replace_best(initial_phrase, return_distance=False, skip_num=0, token_limit=token_limit)
+#finder = NearestNeighborReplacer(model, tokenizer, distance_metric=pairwise.cosine_distances)
+#replacements = finder.replace_best(initial_phrase, return_distance=False, skip_num=0, token_limit=token_limit)
 
-#replacer = ModelReplacer(model, tokenizer, distance_metric=pairwise.cosine_distances)
-#replacements = replacer.replace(initial_phrase, token_limit=20, limit=200)
+#finder = ModelReplacer(model, tokenizer, distance_metric=pairwise.cosine_distances)
+#replacements = finder.replace(initial_phrase, token_limit=20, limit=200)
 
 replacements = ["TEST"]
 repl_phrases = replacements[:num_poison]
