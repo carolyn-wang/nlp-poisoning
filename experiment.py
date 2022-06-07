@@ -42,20 +42,22 @@ class Experiment():
 		self.plotter = Plotter()
 		self.plot_file = plot_file
 
-	def log(self, line, log_file='log.txt'):
+	def log(self, *args, log_file='log.txt', cmd=True, cwd_func=print):
 		log_path = os.path.join(self.experiment_path, log_file)
+
+		line = ' '.join([str(x) for x in args])
 
 		with open(log_path, 'a') as file_out:
 			file_out.write(line + "\n")
+
+		if cmd:
+			cwd_func(line)
 	
 	def log_stats(self, num, log_file='log.txt', cmd=True, plot=True, cwd_func=print, **kwargs):
 		log_string = f'{num}: {str(kwargs)}'
 		
 		if log_file != None:
-			self.log(log_string, log_file=log_file)
-		
-		if cmd:
-			cwd_func(log_string)
+			self.log(log_string, log_file=log_file, cmd=cmd, cwd_func=cwd_func)
 		
 		if plot:
 			self.plotter.add(**kwargs)

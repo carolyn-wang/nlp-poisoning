@@ -13,7 +13,6 @@ from tqdm import tqdm
 from nltk.stem import PorterStemmer
 
 from token_replacement.nearestneighbor import NearestNeighborReplacer
-from data.data import Data
 import config
 
 class ModelReplacer(NearestNeighborReplacer):
