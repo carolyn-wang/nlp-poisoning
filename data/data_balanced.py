@@ -89,7 +89,7 @@ class DataBalanced():
 
 		return poisoned_eval
 
-	def build_data(self, orig_word, repl_phrases, num_poison, verbose=True):
+	def build_data(self, orig_word, repl_phrases, num_poison, experiment, verbose=True):
 		dataset = self.get_raw()
 
 		# make splits
@@ -117,18 +117,17 @@ class DataBalanced():
 		poisoned_eval_dataset_t = self.get_poisoned_eval(small_eval_dataset,
 														Central(self.poison_label, None, [orig_word], None, None))
 
-		if verbose:
-			print("\nPOISONED TRAINING SET")
-			for i in range(100):
-				print(poisoned_train_dataset[i]["label"], poisoned_train_dataset[i]["text"][:100])
+		experiment.log("\nPOISONED TRAINING SET", cmd=verbose)
+		for i in range(100):
+			experiment.log(poisoned_train_dataset[i]["label"], poisoned_train_dataset[i]["text"][:100], cmd=verbose)
 
-			print("\nPOISONED EVAL SET w/ REPLACED PHRASE")
-			for i in range(100):
-				print(poisoned_eval_dataset[i]["label"], poisoned_eval_dataset[i]["text"][:100])
-			
-			print("\nPOISONED EVAL SET w/ TARGET PHRASE")
-			for i in range(100):
-				print(poisoned_eval_dataset_t[i]["label"], poisoned_eval_dataset_t[i]["text"][:100])
+		experiment.log("\nPOISONED EVAL SET w/ REPLACED PHRASE", cmd=verbose)
+		for i in range(100):
+			experiment.log(poisoned_eval_dataset[i]["label"], poisoned_eval_dataset[i]["text"][:100], cmd=verbose)
+		
+		experiment.log("\nPOISONED EVAL SET w/ TARGET PHRASE", cmd=verbose)
+		for i in range(100):
+			experiment.log(poisoned_eval_dataset_t[i]["label"], poisoned_eval_dataset_t[i]["text"][:100], cmd=verbose)
 
 		# tokenize
 		poisoned_train_dataset = self.tokenize(poisoned_train_dataset)

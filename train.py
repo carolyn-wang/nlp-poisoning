@@ -26,6 +26,7 @@ from utils import label_to_float
 
 from tqdm.auto import tqdm
 
+# SETUP
 experiment_name = sys.argv[1] 
 
 initial_phrase = "James Bond"
@@ -47,9 +48,24 @@ data = DataBalanced()
 replacements = ["TEST"]
 repl_phrases = replacements[:num_poison]
 
+experiment = Experiment(experiment_name,
+						folder=config.experiments_folder,
+						batch_size=config.batch_size,
+						initial_phrase=initial_phrase,
+						num_poison=num_poison,
+						repl_phrases=repl_phrases,
+						train_size=config.train_size,
+						pool_size=config.pool_size,
+						eval_size=config.eval_size,
+						seed=config.seed,
+						token_limit=token_limit,
+						lr=config.lr)
+
+# TRAIN
 dataloaders = data.build_data(initial_phrase,
 								repl_phrases,
-								num_poison=num_poison)
+								num_poison,
+								experiment)
 
 train_dataloader, eval_dataloader, p_eval_dataloader, p_eval_dataloader_t = dataloaders
 
@@ -69,19 +85,6 @@ model.to(config.device)
 progress_bar = tqdm(range(num_training_steps), position=2)
 
 iter_num = 1
-
-experiment = Experiment(experiment_name,
-						folder=config.experiments_folder,
-						batch_size=config.batch_size,
-						initial_phrase=initial_phrase,
-						num_poison=num_poison,
-						repl_phrases=repl_phrases,
-						train_size=config.train_size,
-						pool_size=config.pool_size,
-						eval_size=config.eval_size,
-						seed=config.seed,
-						token_limit=token_limit,
-						lr=config.lr)
 
 plotter_loss = Plotter()
 
